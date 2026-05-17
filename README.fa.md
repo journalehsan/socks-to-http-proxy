@@ -1,4 +1,4 @@
-# socks-to-http-proxy ![Rust](https://github.com/KaranGauswami/socks-to-http-proxy/workflows/Rust/badge.svg) ![release](https://img.shields.io/github/v/release/KaranGauswami/socks-to-http-proxy?include_prereleases)
+# socks-to-http-proxy ![Rust](https://github.com/journalehsan/socks-to-http-proxy/workflows/Rust/badge.svg) ![release](https://img.shields.io/github/v/release/journalehsan/socks-to-http-proxy?include_prereleases)
 
 [🇬🇧 English](README.md) | [🇮🇷 فارسی](README.fa.md)
 
@@ -21,7 +21,7 @@
 مخزن را کلون کرده و اسکریپت نصب را اجرا کنید. اسکریپت به‌طور خودکار تشخیص می‌دهد که root هستید یا کاربر عادی.
 
 ```bash
-git clone https://github.com/KaranGauswami/socks-to-http-proxy.git
+git clone https://github.com/journalehsan/socks-to-http-proxy.git
 cd socks-to-http-proxy
 
 # نصب برای کاربر (بدون نیاز به sudo)
@@ -91,7 +91,7 @@ unset-proxy    # غیرفعال‌سازی و پاک کردن متغیرهای �
 ## کامپایل دستی
 
 ۱. مطمئن شوید که نسخه فعلی `cargo` و [Rust](https://www.rust-lang.org) نصب شده است
-۲. مخزن را کلون کنید: `$ git clone https://github.com/KaranGauswami/socks-to-http-proxy.git && cd socks-to-http-proxy`
+۲. مخزن را کلون کنید: `$ git clone https://github.com/journalehsan/socks-to-http-proxy.git && cd socks-to-http-proxy`
 ۳. پروژه را بسازید: `$ cargo build --release`
 ۴. پس از اتمام، باینری در `target/release/sthp` قرار دارد
 

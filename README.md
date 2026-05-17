@@ -1,4 +1,4 @@
-# socks-to-http-proxy ![Rust](https://github.com/KaranGauswami/socks-to-http-proxy/workflows/Rust/badge.svg) ![release](https://img.shields.io/github/v/release/KaranGauswami/socks-to-http-proxy?include_prereleases)
+# socks-to-http-proxy ![Rust](https://github.com/journalehsan/socks-to-http-proxy/workflows/Rust/badge.svg) ![release](https://img.shields.io/github/v/release/journalehsan/socks-to-http-proxy?include_prereleases)
 
 [🇬🇧 English](README.md) | [🇮🇷 فارسی](README.fa.md)
 
@@ -20,7 +20,7 @@ Clone the repo and run the installer.  The script auto-detects whether you are
 root or a regular user and sets up everything accordingly.
 
 ```bash
-git clone https://github.com/KaranGauswami/socks-to-http-proxy.git
+git clone https://github.com/journalehsan/socks-to-http-proxy.git
 cd socks-to-http-proxy
 
 # User install (no sudo needed)
@@ -91,7 +91,7 @@ unset-proxy    # clear all proxy environment variables
 ## Compiling manually
 
 1.  Ensure you have current version of `cargo` and [Rust](https://www.rust-lang.org) installed
-2.  Clone the project `$ git clone https://github.com/KaranGauswami/socks-to-http-proxy.git && cd socks-to-http-proxy`
+2.  Clone the project `$ git clone https://github.com/journalehsan/socks-to-http-proxy.git && cd socks-to-http-proxy`
 3.  Build the project `$ cargo build --release`
 4.  Once complete, the binary will be located at `target/release/sthp`
 
