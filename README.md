@@ -1,4 +1,4 @@
-# socks-to-http-proxy ![Rust](https://github.com/journalehsan/socks-to-http-proxy/workflows/Rust/badge.svg) ![release](https://img.shields.io/github/v/release/journalehsan/socks-to-http-proxy?include_prereleases)
+# socks-to-http-proxy ![Rust](https://github.com/journalehsan/socks-to-http-proxy/workflows/Rust/badge.svg) ![release](https://img.shields.io/github/v/release/journalehsan/socks-to-http-proxy?include_prereleases) [![GitHub Pages](https://img.shields.io/badge/docs-live-blue)](https://journalehsan.github.io/socks-to-http-proxy/)
 
 [🇬🇧 English](README.md) | [🇮🇷 فارسی](README.fa.md)
 
