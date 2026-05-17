@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>socks-to-http-proxy · Convert SOCKS5 to HTTP proxy</title>
+    <meta name="description" content="sthp converts SOCKS5 proxy (Tor, Shadowsocks, etc.) into a standard HTTP proxy — works everywhere, no more torsocks issues.">
+    <meta name="keywords" content="socks5, http proxy, tor, shadowsocks, rust, hyper, socks-to-http">
+    <meta name="author" content="journalehsan">
+    
+    <!-- Open Graph / Social -->
+    <meta property="og:title" content="socks-to-http-proxy">
+    <meta property="og:description" content="Convert any SOCKS5 proxy to HTTP proxy. Perfect for Tor, Shadowsocks, and all your apps.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://journalehsan.github.io/socks-to-http-proxy/">
+    
+    <!-- Favicon style (simple emoji as fallback, but looks clean) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔄</text></svg>">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #f9fafb;
+            color: #111827;
+            line-height: 1.5;
+            padding: 2rem 1rem;
+        }
+        
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.08);
+            overflow: hidden;
+            padding: 2rem 1.5rem;
+        }
+        
+        /* Language toggle */
+        .lang-switch {
+            text-align: right;
+            margin-bottom: 2rem;
+        }
+        
+        .lang-btn {
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            padding: 0.4rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #1f2937;
+        }
+        
+        .lang-btn:hover {
+            background: #e5e7eb;
+            transform: translateY(-1px);
+        }
+        
+        /* Sections */
+        .lang-section {
+            display: none;
+        }
+        
+        .lang-section.active {
+            display: block;
+        }
+        
+        h1 {
+            font-size: 2.4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+        }
+        
+        .badge-group {
+            margin: 1rem 0 1.5rem 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+        }
+        
+        .badge {
+            background: #eef2ff;
+            padding: 0.25rem 0.85rem;
+            border-radius: 2rem;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #1e3a8a;
+        }
+        
+        .tagline {
+            font-size: 1.25rem;
+            color: #4b5563;
+            border-left: 4px solid #3b82f6;
+            padding-left: 1rem;
+            margin: 1.5rem 0;
+        }
+        
+        h2 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin: 2rem 0 1rem 0;
+            border-bottom: 2px solid #eef2ff;
+            padding-bottom: 0.4rem;
+        }
+        
+        h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 1.5rem 0 0.75rem 0;
+        }
+        
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 1rem;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            margin: 1rem 0;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+        
+        code {
+            background: #f1f5f9;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.5rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #0f172a;
+        }
+        
+        pre code {
+            background: transparent;
+            padding: 0;
+            color: inherit;
+        }
+        
+        .note {
+            background: #fef9e3;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin: 1.2rem 0;
+        }
+        
+        .warning {
+            background: #fee2e2;
+            border-left: 4px solid #dc2626;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin: 1.2rem 0;
+        }
+        
+        .tip {
+            background: #e0f2fe;
+            border-left: 4px solid #0284c7;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            margin: 1.2rem 0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.2rem 0;
+        }
+        
+        th, td {
+            border: 1px solid #e5e7eb;
+            padding: 0.6rem;
+            text-align: left;
+        }
+        
+        th {
+            background: #f8fafc;
+            font-weight: 600;
+        }
+        
+        .footer {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #eef2ff;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #6b7280;
+        }
+        
+        a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 640px) {
+            .container {
+                padding: 1.25rem;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+        
+        .command-icon {
+            font-family: monospace;
+            background: #0f172a;
+            color: #94a3b8;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="lang-switch">
+        <button class="lang-btn" id="btn-en">🇬🇧 English</button>
+        <button class="lang-btn" id="btn-fa">🇮🇷 فارسی</button>
+    </div>
+
+    <!-- ========================== ENGLISH SECTION ========================= -->
+    <div id="en-section" class="lang-section active">
+        <h1>🔄 socks-to-http-proxy</h1>
+        <div class="badge-group">
+            <span class="badge">Rust 🦀</span>
+            <span class="badge">hyper ⚡</span>
+            <span class="badge">SOCKS5 → HTTP</span>
+            <span class="badge">Tor / Shadowsocks ready</span>
+        </div>
+        <div class="tagline">
+            Convert any SOCKS5 proxy into a standard HTTP proxy — works with every app, terminal, and tool.
+        </div>
+
+        <p><strong>sthp</strong> creates an HTTP proxy that tunnels traffic through a SOCKS5 backend (Tor, Shadowsocks, OpenSSH dynamic forwarding, or any custom SOCKS5). No more struggling with <code>torsocks</code> or LD_PRELOAD hacks — just point your apps to <code>http://127.0.0.1:8080</code> and everything works.</p>
+
+        <div class="tip">
+            💡 <strong>Perfect for:</strong> Tor, Shadowsocks, WireGuard + SOCKS, corporate SOCKS proxies — use them in any HTTP‑aware client (curl, wget, npm, apt, Docker, browsers via PAC, etc.).
+        </div>
+
+        <h2>⚡ Quick install (recommended)</h2>
+        <pre><code>git clone https://github.com/journalehsan/socks-to-http-proxy.git
+cd socks-to-http-proxy
+
+# User install (no sudo)
+./scripts/install.sh
+
+# System-wide install
+sudo ./scripts/install.sh</code></pre>
+        <p>The installer auto-detects your environment, builds the binary if needed, installs a systemd service, and adds handy <code>set-proxy</code>/<code>unset-proxy</code> helpers to your shell.</p>
+
+        <h2>🚀 Run manually (no install)</h2>
+        <pre><code>sthp -p 8080 -s 127.0.0.1:1080</code></pre>
+        <p>This starts an HTTP proxy on <code>127.0.0.1:8080</code> forwarding to SOCKS5 at <code>127.0.0.1:1080</code> (Tor's default). Change IP/port as needed.</p>
+
+        <h2>🔧 All options</h2>
+        <pre><code>sthp --help</code></pre>
+        <table>
+            <tr><th>Option</th><th>Description</th></tr>
+            <tr><td><code>-p, --port</code></td><td>HTTP proxy listen port (default: 8080)</td></tr>
+            <tr><td><code>--listen-ip</code></td><td>Bind address (default: 127.0.0.1)</td></tr>
+            <tr><td><code>-s, --socks-address</code></td><td>SOCKS5 address (default: 127.0.0.1:1080)</td></tr>
+            <tr><td><code>-u, --username</code></td><td>SOCKS5 auth username</td></tr>
+            <tr><td><code>-P, --password</code></td><td>SOCKS5 auth password</td></tr>
+            <tr><td><code>--allowed-domains</code></td><td>Comma-separated list of allowed domains (whitelist)</td></tr>
+            <tr><td><code>--http-basic</code></td><td>HTTP Basic Auth "user:passwd"</td></tr>
+            <tr><td><code>-d, --detached</code></td><td>Daemon mode (Unix only)</td></tr>
+        </table>
+
+        <div class="warning">
+            ⚠️ <strong>Since v0.5</strong> default listen IP is <code>127.0.0.1</code> (local only). Use <code>--listen-ip 0.0.0.0</code> to expose to network (be careful).
+        </div>
+
+        <h2>📦 Systemd service (after install)</h2>
+        <pre><code># User service
+systemctl --user start sthp
+systemctl --user enable sthp
+
+# System service
+sudo systemctl start sthp
+sudo systemctl enable sthp</code></pre>
+        <p>Configuration file: <code>/etc/sthprc</code> (system) or <code>~/.config/sthprc</code> (user) — edit <code>HTTP_PORT</code> and <code>SOCKS_PORT</code>.</p>
+
+        <h2>🎯 Terminal helpers</h2>
+        <pre><code>set-proxy      # exports http_proxy, https_proxy -> http://127.0.0.1:8080
+unset-proxy    # removes all proxy env vars</code></pre>
+
+        <h2>🐧 Why use sthp instead of torsocks / proxychains?</h2>
+        <ul>
+            <li>✅ Works with <strong>any</strong> application that supports HTTP proxies (curl, wget, Firefox, APT, pip, npm, Docker, git, etc.)</li>
+            <li>✅ No LD_PRELOAD or broken DNS leaks — clean TCP stream handling</li>
+            <li>✅ Perfect for <strong>Tor</strong> (socks5h mode, DNS resolution on the remote side) and <strong>Shadowsocks</strong> (via ss-redir or ss-local SOCKS)</li>
+            <li>✅ Lightweight, async Rust (hyper + tokio) — fast and reliable</li>
+            <li>✅ Optional domain whitelisting + HTTP Basic auth</li>
+        </ul>
+
+        <div class="note">
+            📘 <strong>Note:</strong> The <code>--socks-address</code> flag uses SOCKS5h (remote DNS). No schema needed. Example: <code>-s 192.168.1.10:9050</code>
+        </div>
+
+        <h2>🛠 Build from source</h2>
+        <pre><code>cargo build --release
+./target/release/sthp -p 8080 -s 127.0.0.1:1080</code></pre>
+
+        <h2>🌍 Real‑world scenarios</h2>
+        <ul>
+            <li><strong>Tor + any app</strong>: <code>sthp -s 127.0.0.1:9050</code> → set system HTTP proxy to localhost:8080.</li>
+            <li><strong>Shadowsocks</strong>: run `ss-local -s server -p 8388 -l 1080 -m chacha20` then <code>sthp -s 127.0.0.1:1080</code>.</li>
+            <li><strong>SSH dynamic forward</strong>: <code>ssh -D 1080 user@vps</code> → <code>sthp -s 127.0.0.1:1080</code> → HTTP proxy for all tools.</li>
+        </ul>
+
+        <div class="footer">
+            <a href="https://github.com/journalehsan/socks-to-http-proxy">📎 GitHub Repository</a> &nbsp;|&nbsp;
+            <a href="https://github.com/journalehsan/socks-to-http-proxy/issues">🐞 Report issue</a> &nbsp;|&nbsp;
+            MIT · Made with 🦀
+        </div>
+    </div>
+
+    <!-- ========================== PERSIAN SECTION ========================= -->
+    <div id="fa-section" class="lang-section" dir="rtl">
+        <h1>🔄 socks-to-http-proxy</h1>
+        <div class="badge-group">
+            <span class="badge">Rust 🦀</span>
+            <span class="badge">hyper ⚡</span>
+            <span class="badge">SOCKS5 → HTTP</span>
+            <span class="badge">سازگار با Tor و Shadowsocks</span>
+        </div>
+        <div class="tagline">
+            تبدیل هر پروکسی SOCKS5 به یک پروکسی HTTP استاندارد — بدون دردسر torsocks، قابل استفاده در تمام برنامه‌ها و ترمینال
+        </div>
+
+        <p><strong>sthp</strong> یک پروکسی HTTP می‌سازد که ترافیک را از طریق پروکسی SOCKS5 هدایت می‌کند (Tor، Shadowsocks، OpenSSH، و غیره). دیگر خبری از <code>torsocks</code> یا تداخل LD_PRELOAD نیست — کافی است برنامه‌ها را به <code>http://127.0.0.1:8080</code>指向 کنید.</p>
+
+        <div class="tip">
+            💡 <strong>کاربرد ایده‌آل:</strong> Tor، Shadowsocks، هر سرور SOCKS5 شرکتی — از آن در curl، npm، apt، Docker، مرورگر (با PAC) استفاده کنید.
+        </div>
+
+        <h2>⚡ نصب سریع (پیشنهادی)</h2>
+        <pre><code>git clone https://github.com/journalehsan/socks-to-http-proxy.git
+cd socks-to-http-proxy
+
+# نصب برای کاربر (بدون sudo)
+./scripts/install.sh
+
+# نصب سیستمی (همه کاربران)
+sudo ./scripts/install.sh</code></pre>
+        <p>اسکریپت نصب به‌طور خودکار محیط شما را تشخیص می‌دهد، باینری را می‌سازد، سرویس systemd نصب می‌کند و دستورات <code>set-proxy</code>/<code>unset-proxy</code> را به شل شما اضافه می‌کند.</p>
+
+        <h2>🚀 اجرای دستی (بدون نصب)</h2>
+        <pre><code>sthp -p 8080 -s 127.0.0.1:1080</code></pre>
+        <p>یک پروکسی HTTP روی <code>127.0.0.1:8080</code> ایجاد می‌کند که به SOCKS5 روی <code>127.0.0.1:1080</code> (پیش‌فرض Tor) متصل می‌شود.</p>
+
+        <h2>🔧 همه گزینه‌ها</h2>
+        <pre><code>sthp --help</code></pre>
+        <table>
+            <tr><th>گزینه</th><th>توضیح</th></tr>
+            <tr><td><code>-p, --port</code></td><td>پورت شنود HTTP (پیش‌فرض: 8080)</td></tr>
+            <tr><td><code>--listen-ip</code></td><td>آدرس Bind (پیش‌فرض: 127.0.0.1)</td></tr>
+            <tr><td><code>-s, --socks-address</code></td><td>آدرس SOCKS5 (پیش‌فرض: 127.0.0.1:1080)</td></tr>
+            <tr><td><code>-u, --username</code></td><td>نام کاربری احراز هویت SOCKS5</td></tr>
+            <tr><td><code>-P, --password</code></td><td>رمز عبور SOCKS5</td></tr>
+            <tr><td><code>--allowed-domains</code></td><td>لیست دامنه‌های مجاز (جداشده با کاما)</td></tr>
+            <tr><td><code>--http-basic</code></td><td>احراز هویت HTTP Basic به فرم "user:passwd"</td></tr>
+            <tr><td><code>-d, --detached</code></td><td>اجرا در پس‌زمینه (فقط یونیکس)</td></tr>
+        </table>
+
+        <div class="warning">
+            ⚠️ <strong>از نسخه v0.5</strong> به بعد آدرس پیش‌فرض <code>127.0.0.1</code> است (فقط لوکال). برای دسترسی از شبکه از <code>--listen-ip 0.0.0.0</code> استفاده کنید.
+        </div>
+
+        <h2>📦 سرویس systemd (بعد از نصب)</h2>
+        <pre><code># سرویس کاربر
+systemctl --user start sthp
+systemctl --user enable sthp
+
+# سرویس سیستمی
+sudo systemctl start sthp
+sudo systemctl enable sthp</code></pre>
+        <p>فایل تنظیمات: <code>/etc/sthprc</code> (سیستمی) یا <code>~/.config/sthprc</code> (کاربر). متغیرهای <code>HTTP_PORT</code> و <code>SOCKS_PORT</code> را ویرایش کنید.</p>
+
+        <h2>🎯 دستورات کمکی ترمینال</h2>
+        <pre><code>set-proxy      # تنظیم http_proxy و https_proxy روی 127.0.0.1:8080
+unset-proxy    # پاک کردن تمام متغیرهای پروکسی</code></pre>
+
+        <h2>🐧 چرا sthp به جای torsocks / proxychains؟</h2>
+        <ul>
+            <li>✅ با <strong>هر</strong> برنامه‌ای که از پروکسی HTTP پشتیبانی می‌کند کار می‌کند (curl، Firefox، APT، npm، Docker، git و...)</li>
+            <li>✅ بدون LD_PRELOAD یا نشت DNS — مدیریت تمیز TCP</li>
+            <li>✅ عالی برای <strong>Tor</strong> (حالت socks5h: رزولوشن DNS در سمت SOCKS) و <strong>Shadowsocks</strong></li>
+            <li>✅ سبک و غیرهمزمان (Rust + hyper) — سریع و پایدار</li>
+            <li>✅ امکان فهرست سفید دامنه و احراز هویت HTTP Basic</li>
+        </ul>
+
+        <div class="note">
+            📘 <strong>نکته:</strong> پرچم <code>--socks-address</code> از SOCKS5h استفاده می‌کند (DNS در سمت سرور). نیازی به http:// یا socks5:// نیست. مثال: <code>-s 192.168.1.10:9050</code>
+        </div>
+
+        <h2>🛠 ساخت از سورس</h2>
+        <pre><code>cargo build --release
+./target/release/sthp -p 8080 -s 127.0.0.1:1080</code></pre>
+
+        <h2>🌍 سناریوهای واقعی</h2>
+        <ul>
+            <li><strong>Tor + هر اپلیکیشنی</strong>: <code>sthp -s 127.0.0.1:9050</code> → پروکسی HTTP سیستم را روی localhost:8080 تنظیم کنید.</li>
+            <li><strong>Shadowsocks</strong>: اجرای `ss-local -s سرور -p 8388 -l 1080` سپس <code>sthp -s 127.0.0.1:1080</code>.</li>
+            <li><strong>SSH dynamic forward</strong>: <code>ssh -D 1080 user@vps</code> → <code>sthp -s 127.0.0.1:1080</code> → تبدیل به پروکسی HTTP.</li>
+        </ul>
+
+        <div class="footer">
+            <a href="https://github.com/journalehsan/socks-to-http-proxy">📎 مخزن GitHub</a> &nbsp;|&nbsp;
+            <a href="https://github.com/journalehsan/socks-to-http-proxy/issues">🐞 گزارش مشکل</a> &nbsp;|&nbsp;
+            MIT · ساخته شده با 🦀
+        </div>
+    </div>
+</div>
+
+<script>
+    const enSection = document.getElementById('en-section');
+    const faSection = document.getElementById('fa-section');
+    const btnEn = document.getElementById('btn-en');
+    const btnFa = document.getElementById('btn-fa');
+
+    function setLanguage(lang) {
+        if (lang === 'en') {
+            enSection.classList.add('active');
+            faSection.classList.remove('active');
+            document.documentElement.lang = 'en';
+            document.dir = 'ltr';
+            localStorage.setItem('sthp_lang', 'en');
+        } else {
+            enSection.classList.remove('active');
+            faSection.classList.add('active');
+            document.documentElement.lang = 'fa';
+            document.dir = 'rtl';
+            localStorage.setItem('sthp_lang', 'fa');
+        }
+    }
+
+    btnEn.addEventListener('click', () => setLanguage('en'));
+    btnFa.addEventListener('click', () => setLanguage('fa'));
+
+    // Load saved preference
+    const savedLang = localStorage.getItem('sthp_lang');
+    if (savedLang === 'fa') setLanguage('fa');
+    else setLanguage('en');
+</script>
+</body>
+</html>
